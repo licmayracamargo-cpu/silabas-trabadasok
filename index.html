@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sílabas trabadas</title>
+<style>
+:root{--g:#2fb344;--b:#4d96ff;--p:#ff6b9d;--o:#ff9f45;--v:#8b5cf6;--t:#14b8a6}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Comic Sans MS","Chalkboard SE",Nunito,sans-serif;background:linear-gradient(#dff3ff,#fff3e0);color:#333;min-height:100vh}
+header{text-align:center;padding:8px}h1{margin:4px;font-size:clamp(20px,5vw,34px);color:var(--v)}
+nav{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+button,select{font:inherit;font-size:18px;border:0;border-radius:16px;padding:10px 16px;cursor:pointer;background:var(--b);color:#fff;box-shadow:0 4px 0 rgba(0,0,0,.2)}
+button:active{transform:translateY(3px);box-shadow:none}
+nav button.on{background:var(--p)}
+main{max-width:900px;margin:8px auto;padding:14px;background:#fff;border-radius:24px;box-shadow:0 6px 20px rgba(0,0,0,.12);text-align:center;min-height:320px}
+.big{font-size:76px}.wd{font-size:clamp(36px,10vw,64px);font-weight:bold;color:var(--v)}
+.bk{display:inline-block;min-width:90px;border-bottom:5px dashed var(--o);color:var(--o)}.bk.ok{color:var(--g);border-color:var(--g)}
+.row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:12px}
+.opt{font-size:30px;min-width:90px;padding:14px 18px}.row button:nth-child(5n+1){background:var(--p)}.row button:nth-child(5n+2){background:var(--o)}.row button:nth-child(5n+3){background:var(--g)}.row button:nth-child(5n+4){background:var(--t)}.row button:nth-child(5n+5){background:var(--v)}
+.chip{padding:6px 12px;font-size:16px;background:#adb5bd}.chip.sel{background:var(--v)}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.card{height:78px;font-size:clamp(14px,3.6vw,22px);padding:4px;background:var(--v)}
+.card.up,.card.done{background:#fff;color:#333;border:3px solid var(--g)}
+table{margin:10px auto;border-collapse:collapse}td{width:42px;height:42px;padding:0;position:relative}
+td:not(.x){border:2px solid var(--b);background:#fff}td input{width:100%;height:100%;border:0;text-align:center;font:bold 22px "Comic Sans MS",sans-serif;text-transform:uppercase;background:transparent}
+td i{position:absolute;top:0;left:2px;font-size:10px;font-style:normal;color:#e8590c}
+td.ok{background:#d3f9d8}td.bad{background:#ffe3e3}
+.cl{text-align:left;max-width:560px;margin:auto}.cl p{margin:6px 0}.cl button{padding:4px 10px;font-size:15px}
+.g{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;max-width:420px;margin:10px auto}
+.g button{padding:0;aspect-ratio:1;font-size:clamp(15px,4.5vw,24px);background:#fff;color:#333;border:2px solid #ced4da;box-shadow:none}
+.wl span{display:inline-block;margin:3px;padding:4px 10px;border-radius:12px;background:#eee}
+.stage{position:relative;height:320px;border:3px dashed #bbb;border-radius:20px;margin:10px 0;overflow:hidden}
+.stage b{position:absolute;font-size:clamp(30px,8vw,52px);white-space:nowrap}
+.bar{height:10px;background:#eee;border-radius:5px}.bar div{height:100%;background:var(--g);border-radius:5px}
+</style></head><body>
+<header><h1>🌈 Sílabas trabadas 🌈</h1><div id="st">⭐ 0</div><nav id="nav"></nav></header>
+<main id="m"></main>
+<script>
+const RAW={
+bl:"blando,blusa,tablero,bloque,hablar,nublado,temblor,biblia,cable,amable,ombligo,público,pueblo",
+br:"brazo,bravo,cabra,cobre,cebra,breve,libre,nombre,sombrero,brillo,brisa,abrir,sombrilla,brocha,libro,hombre,hombro,asombro,bruja,brújula,cubrir",
+cl:"clase,claro,clavo,ancla,chicle,bicicleta,tecla,Cleopatra,clima,clip,clínica,eclipse,cloro,clon,ciclo,choclo,Clotilde,club,exclusivo",
+dr:"dragón,piedra,cuadro,madre,padres,podrido,ajedrez,cocodrilo,ladrillo,Pedro,mandril,vidrio,madrugar",
+fl:"flaco,flamenco,inflar,flan,flecha,reflejo,flema,coliflor,picaflor,flores,flotar,fluido,fluvial,flojo",
+fr:"frase,frasco,disfraz,frágil,fragancia,fresa,frente,cofre,fritar,frío,África,sufrir,frontera,frotar,fruta,frutilla,disfrutar",
+gr:"granja,grasa,agradecer,milagro,tigre,alegre,vinagre,progreso,gringo,grito,grillo,gris,negro,grueso,grosero,logro,grupo,grúa,gruñir,Graciela",
+gl:"gladiador,regla,arreglo,inglés,iglesia,jungla,globo,gloria,siglo,glotón,aglutinar,glaciar",
+pr:"pradera,comprar,temprano,premio,presa,siempre,sorpresa,princesa,primero,prisa,capricho,pronto,profesora,problema,prueba,prudente",
+pl:"plato,playa,planta,regla,completo,pleito,pleno,plátano,pliegue,multiplicar,aplicar,explicar,plomo,explosión,pluma,plural,plumero",
+tr:"trabajo,trampa,trompo,letra,retrato,tripa,tren,tropa,estrella,entrar,treinta,trigo,triste,triángulo,trozo,cuatro,nosotros,nuestro,trofeo,trueno,truco,avestruz,construir"};
+const KEYS=Object.keys(RAW),G={};KEYS.forEach(k=>G[k]=RAW[k].split(","));
+const ALL=[...new Set(KEYS.flatMap(k=>G[k]))];
+const E={};"blusa👚,cabra🐐,cebra🦓,libro📖,biblia📖,sombrero👒,bruja🧙,brazo💪,bicicleta🚲,tecla⌨️,clavo🔩,ancla⚓,dragon🐉,madre👩,cocodrilo🐊,ladrillo🧱,flamenco🦩,flecha🏹,flan🍮,flores🌸,fresa🍓,fruta🍎,frasco🫙,granja🚜,tigre🐯,grillo🦗,globo🎈,iglesia⛪,plato🍽️,playa🏖️,planta🪴,pluma🪶,tren🚂,estrella⭐,trigo🌾,triangulo🔺,trompo🪀,princesa👸,premio🏆,trofeo🏆,regla📏,trueno⚡,brujula🧭,cable🔌,pueblo🏘️,nublado☁️,vidrio🪟,jungla🌴,gris🩶,negro⬛,grua🏗️,grupo👥,bravo👏,brillo✨,brisa🍃,brocha🖌️,hombre👨,cobre🟠,sombrilla⛱️,clip📎,clima🌦️,eclipse🌘,coliflor🥦,flotar🛟,cuatro4️⃣,avestruz🐦,pedro👦".split(",").forEach(s=>{const m=s.match(/^[a-z]+/);E[m[0]]=s.slice(m[0].length)});
+const $=s=>document.querySelector(s),M=$("#m"),V=["a","e","i","o","u"];
+const norm=s=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+const sh=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const rnd=a=>a[Math.random()*a.length|0],lab=k=>V.map(v=>k+v).join(" ");
+const sp=(w,k)=>{const n=norm(w),m=n.match(new RegExp(k+"[aeiou]"));return m?{pre:w.slice(0,m.index),s:m[0],post:w.slice(m.index+3)}:null};
+let stars=0,T,I,A,DROP=()=>{};
+const addStar=(n=1)=>{stars+=n;$("#st").textContent="⭐ "+stars};
+function say(t){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="es-ES";u.rate=.8;const v=speechSynthesis.getVoices().find(v=>v.lang.startsWith("es"));if(v)u.voice=v;speechSynthesis.speak(u)}catch(e){}}
+const ACT={say:v=>say(v)};
+M.onclick=e=>{const b=e.target.closest("[data-a]");if(b&&ACT[b.dataset.a])ACT[b.dataset.a](b.dataset.v,b)};
+M.ondragstart=e=>e.dataTransfer.setData("text",e.target.dataset.v||"");
+M.ondragover=e=>e.preventDefault();
+M.ondrop=e=>{e.preventDefault();if(e.target.closest(".bk"))DROP(e.dataTransfer.getData("text"))};
+const F=[g1,g2,g3,g4,g5,g6],names=["🧩 Arrastra","✏️ Crucigrama","🃏 Memoria","📝 Oraciones","🔍 Sopa","🚀 Lectura veloz"];
+$("#nav").innerHTML=names.map((n,i)=>`<button onclick="go(${i})">${n}</button>`).join("");
+function go(i){try{speechSynthesis.cancel()}catch(e){}clearTimeout(T);clearInterval(I);[...$("#nav").children].forEach((b,j)=>b.classList.toggle("on",j==i));F[i]()}
+const speak=w=>`<button data-a=say data-v="${w}">🔊 Escuchar</button>`;
+const again=(f,t="Jugar otra vez")=>`<button data-a=go data-v=${f}>${t}</button>`;
+ACT.go=v=>go(+v);
+
+/* 1. ARRASTRE */
+function g1(){A={l:sh(KEYS).map(k=>({k,w:rnd(G[k].filter(x=>sp(x,k)))})),i:0};r1()}
+function r1(){
+ if(A.i>=A.l.length){M.innerHTML=`<h2>🎉 ¡Terminaste!</h2>${again(0)}`;say("¡Muy bien! ¡Terminaste!");addStar(3);return}
+ const{k,w}=A.l[A.i],s=sp(w,k),o=sh([s.s,...sh(KEYS.filter(x=>x!=k)).slice(0,4).map(x=>x+rnd(V))]);
+ M.innerHTML=`<p>Palabra ${A.i+1} de ${A.l.length} · <b>${lab(k)}</b></p><div class=big>${E[norm(w)]||"🔤"}</div><div class=wd>${s.pre}<span id=bk class=bk>___</span>${s.post}</div>${speak(w)}<p>Arrastra o toca la sílaba que falta 👇</p><div class=row>${o.map(x=>`<button class=opt draggable=true data-a=p1 data-v=${x}>${x}</button>`).join("")}</div><p id=fb></p>`;
+ DROP=ACT.p1;say(w)}
+ACT.p1=x=>{if(A.lock)return;const{k,w}=A.l[A.i];if(x==sp(w,k).s){A.lock=1;const b=$("#bk");b.textContent=x;b.className="bk ok";$("#fb").textContent="¡Muy bien! 🎉";say(w);addStar();T=setTimeout(()=>{A.lock=0;A.i++;r1()},1600)}else{$("#fb").textContent="Intenta otra vez 💪";say("Intenta otra vez")}};
+
+/* 2. CRUCIGRAMA */
+const CW=[[["LIBRO",2,3,"h","Lo leo en la biblioteca","📖"],["BRAZO",2,5,"v","Tiene codo y mano","💪"],["COBRE",1,7,"v","Metal naranja de las monedas","🟠"],["HOMBRO",6,0,"h","Une el brazo con el cuerpo","🦾"]],
+[["PLATO",2,0,"h","Como mi comida en él","🍽️"],["TREN",2,3,"v","Va por las vías","🚂"],["PLUMA",2,0,"v","Las aves la tienen; sirve para escribir","🪶"],["NEGRO",5,3,"h","Color de la noche oscura","⬛"]]];
+function g2(i=0){
+ const c=CW[i],cell={};A={i};c.forEach(([a,r,cc,d])=>[...a].forEach((l,j)=>{const y=r+(d=="v"?j:0),x=cc+(d=="h"?j:0);cell[y+","+x]={l,n:j?0:cell[y+","+x]?.n}}));
+ c.forEach(([a,r,cc],n)=>{cell[r+","+cc].n=n+1});
+ let t="";for(let y=0;y<7;y++){t+="<tr>";for(let x=0;x<8;x++){const q=cell[y+","+x];t+=q?`<td data-l=${q.l}><i>${q.n||""}</i><input maxlength=1 autocomplete=off></td>`:"<td class=x></td>"}t+="</tr>"}
+ M.innerHTML=`<h2>Crucigrama ${i+1}</h2><table id=tb>${t}</table><div class=cl>${c.map(([a,r,cc,d,tx,e],n)=>`<p>${n+1}. ${d=="h"?"➡️":"⬇️"} ${e} ${tx} <button data-a=say data-v="${tx}. Tiene ${a.length} letras. Empieza con ${a[0].toLowerCase()}">🔊</button> <button data-a=say data-v="${a.toLowerCase()}">💡 Ayuda</button></p>`).join("")}</div><p><button data-a=chk>✅ Revisar</button> <button data-a=g2 data-v=${1-i}>🔄 Otro crucigrama</button></p><p id=fb></p>`}
+ACT.g2=v=>g2(+v);
+ACT.chk=()=>{let ok=1;document.querySelectorAll("#tb td[data-l]").forEach(td=>{const v=td.firstElementChild.nextElementSibling.value.toUpperCase(),g=v==td.dataset.l;td.className=v?(g?"ok":"bad"):"";if(!g)ok=0});$("#fb").textContent=ok?"🎉 ¡Crucigrama completo!":"Revisa las casillas rojas 💪";if(ok){say("¡Muy bien!");addStar(3)}};
+
+/* 3. MEMORIA */
+let MS={k:"gl",n:6,prev:null};
+function g3(){M.innerHTML=`<h2>🃏 Memoria</h2><p>Grupo:</p><p>${KEYS.map(k=>`<button class="chip ${k==MS.k?"sel":""}" data-a=mk data-v=${k}>${k}</button>`).join(" ")}</p><p><button class="chip ${MS.n==6?"sel":""}" data-a=mn data-v=6>6 parejas</button> <button class="chip ${MS.n==99?"sel":""}" data-a=mn data-v=99>Grupo completo</button></p><p><button data-a=mgo>▶ Jugar</button></p>`}
+ACT.mk=v=>{MS.k=v;g3()};ACT.mn=v=>{MS.n=+v;g3()};
+ACT.mgo=()=>{const w=sh(G[MS.k]).slice(0,MS.n);let c,t=0;do{c=sh([...w,...w])}while(t++<500&&MS.prev&&c.some((x,i)=>x==MS.prev[i]));MS.prev=c;MS.c=c;MS.up=[];MS.done=new Set();MS.lock=0;
+ M.innerHTML=`<p>Grupo <b>${lab(MS.k)}</b></p><div class=cards id=cd style="grid-template-columns:repeat(${c.length>12?6:4},1fr)"></div><p id=fb></p><p><button data-a=mgo>🔀 Barajar de nuevo</button> <button data-a=mnext>➡️ Siguiente grupo</button></p>`;mdraw()};
+ACT.mnext=()=>{MS.k=KEYS[(KEYS.indexOf(MS.k)+1)%KEYS.length];ACT.mgo()};
+function mdraw(){$("#cd").innerHTML=MS.c.map((w,i)=>{const u=MS.up.includes(i),d=MS.done.has(i);return`<button class="card ${u?"up":""} ${d?"done":""}" data-a=flip data-v=${i}>${u||d?w:"❓"}</button>`}).join("")}
+ACT.flip=i=>{i=+i;if(MS.lock||MS.up.includes(i)||MS.done.has(i))return;MS.up.push(i);mdraw();say(MS.c[i]);
+ if(MS.up.length==2){const[a,b]=MS.up;if(MS.c[a]==MS.c[b]){MS.up.forEach(x=>MS.done.add(x));MS.up=[];addStar();mdraw();if(MS.done.size==MS.c.length){$("#fb").textContent="🎉 ¡Encontraste todas las parejas!";say("¡Muy bien!");addStar(3)}}
+ else{MS.lock=1;T=setTimeout(()=>{MS.up=[];MS.lock=0;mdraw()},1000)}}};
+
+/* 4. ORACIONES */
+const S="Mi mamá lleva una ___ rosada.|blusa|bloque|tablero;La ___ vuela en una escoba.|bruja|brisa|brocha;Pinto la pared con una ___.|brocha|brújula|bruja;Voy a la escuela en mi ___.|bicicleta|ancla|tecla;Toco una ___ de la compu.|tecla|clase|clavo;El ___ lanza fuego.|dragón|cuadro|piedra;Mi ___ me da un beso.|madre|piedra|padres;El ___ es un ave rosada.|flamenco|flaco|flecha;Comemos una rica ___ roja.|fresa|frase|frasco;Hoy hace mucho ___, me pongo abrigo.|frío|fruta|frente;La vaca vive en la ___.|granja|grasa|grúa;El ___ es un felino con rayas.|tigre|negro|grillo;Me pongo el ___ para el sol.|sombrero|cobre|libro;Inflo un ___ de colores.|globo|gloria|siglo;Rezo en la ___.|iglesia|jungla|regla;Me gusta ir a la ___ en verano.|playa|planta|plato;Escribo con una ___.|pluma|plato|planta;El ___ va por las vías.|tren|trigo|trozo;Mi ___ me enseña en la escuela.|profesora|princesa|problema;La ___ vive en un castillo.|princesa|premio|prisa;Por la noche veo una ___ en el cielo.|estrella|letra|tropa;Leo un ___ de cuentos.|libro|hombre|hombro".split(";").map(x=>x.split("|"));
+function g4(){A={l:sh(S).slice(0,10),i:0};r4()}
+function r4(){
+ if(A.i>=A.l.length){M.innerHTML=`<h2>🎉 ¡Muy bien!</h2>${again(3)}`;say("¡Excelente lectura!");addStar(3);return}
+ const[t,a,x,y]=A.l[A.i];A.lock=0;
+ M.innerHTML=`<p>Oración ${A.i+1} de ${A.l.length}</p><div class=big>${E[norm(a)]||"📝"}</div><div class=wd style="font-size:clamp(24px,6vw,40px)">${t.replace("___",`<span id=bk class=bk>___</span>`)}</div><button data-a=say data-v="${t.replace("___","mmm")}">🔊 Leer oración</button><div class=row>${sh([a,x,y]).map(w=>`<button class=opt draggable=true data-a=p4 data-v=${w}>${w}</button>`).join("")}</div><p id=fb></p>`;
+ DROP=ACT.p4;say(t.replace("___","mmm"))}
+ACT.p4=w=>{if(A.lock)return;const[t,a]=A.l[A.i];if(w==a){A.lock=1;const b=$("#bk");b.textContent=w;b.className="bk ok";$("#fb").textContent="¡Correcto! 🎉";say(t.replace("___",a));addStar();T=setTimeout(()=>{A.i++;r4()},2500)}else{$("#fb").textContent="Intenta otra vez 💪";say("Intenta otra vez")}};
+
+/* 5. SOPA DE LETRAS */
+const CL=["#ffe066","#8ce99a","#74c0fc","#ffa8cc","#ffc078","#d0a8ff","#63e6be"];let W={k:"bl"};
+function g5(k){k=typeof k=="string"?k:W.k;const N=10,g=Array.from({length:N},()=>Array(N).fill("")),D=[[0,1],[1,0],[1,1]];
+ const ws=sh(G[k].map(w=>({w,n:norm(w).toUpperCase()})).filter(o=>o.n.length<=9&&/^[A-Z]+$/.test(o.n))).slice(0,6).filter(o=>{for(let t=0;t<300;t++){const[dy,dx]=rnd(D),y=Math.random()*N|0,x=Math.random()*N|0,L=o.n.length-1;if(y+dy*L>=N||x+dx*L>=N)continue;let ok=1;for(let i=0;i<=L;i++){const c=g[y+dy*i][x+dx*i];if(c&&c!=o.n[i])ok=0}if(ok){for(let i=0;i<=L;i++)g[y+dy*i][x+dx*i]=o.n[i];return 1}}return 0});
+ g.forEach(r=>r.forEach((c,x)=>{if(!c)r[x]=rnd("ABCDEFGHILMNOPRSTUV")}));
+ W={k,g,ws,s:null,f:0};
+ M.innerHTML=`<h2>🔍 Sopa de letras</h2><p>${KEYS.map(q=>`<button class="chip ${q==k?"sel":""}" data-a=g5 data-v=${q}>${q}</button>`).join(" ")}</p><p>Toca la primera y la última letra de cada palabra.</p><div class=g>${g.map((r,y)=>r.map((c,x)=>`<button data-a=cell data-v=${y},${x}>${c}</button>`).join("")).join("")}</div><div class=wl>${ws.map((o,i)=>`<span id=w${i} data-a=say data-v="${o.w}">🔊 ${o.w}</span>`).join("")}</div><p id=fb></p><button data-a=g5 data-v=${k}>🔄 Nueva sopa</button>`}
+ACT.g5=v=>g5(v);
+ACT.cell=(v,b)=>{const[y,x]=v.split(",").map(Number);if(!W.s){W.s=[y,x];b.style.background="#fff3bf";return}
+ const[sy,sx]=W.s,dy=y-sy,dx=x-sx,L=Math.max(Math.abs(dy),Math.abs(dx)),cs=[];W.s=null;
+ document.querySelectorAll(".g button").forEach(e=>{if(e.style.background=="rgb(255, 243, 191)")e.style.background=""});
+ if(L==0||(dy&&dx&&Math.abs(dy)!=Math.abs(dx)))return;
+ for(let i=0;i<=L;i++)cs.push([sy+Math.sign(dy)*i,sx+Math.sign(dx)*i]);
+ const s=cs.map(([a,c])=>W.g[a][c]).join(""),i=W.ws.findIndex((o,j)=>!o.f&&(o.n==s||o.n==[...s].reverse().join("")));
+ if(i<0){$("#fb").textContent="Esa no es una palabra de la lista 🙂";return}
+ const col=CL[W.f++%7];W.ws[i].f=1;cs.forEach(([a,c])=>document.querySelector(`.g button[data-v="${a},${c}"]`).style.background=col);
+ const el=$("#w"+i);el.style.background=col;say(W.ws[i].w);addStar();$("#fb").textContent="¡Encontraste "+W.ws[i].w+"! 🎉";
+ if(W.ws.every(o=>o.f)){$("#fb").textContent="🌟 ¡Encontraste todas las palabras!";addStar(3)}};
+
+/* 6. LECTURA VELOZ */
+const PAL=["#e8590c","#2b8a3e","#1971c2","#d6336c","#9c36b5","#0ca678","#f08c00"];let R={n:20,sec:5};
+const fmt=ms=>{const s=Math.round(ms/1000);return(s/60|0)+":"+String(s%60).padStart(2,"0")};
+function g6(){let b="";try{b=localStorage.getItem("rv"+R.n+"_"+R.sec)}catch(e){}
+ M.innerHTML=`<h2>🚀 Lectura veloz</h2><p>Lee la palabra en voz alta antes de que desaparezca.</p><p>Palabras: <select id=sn><option value=20>20</option><option value=50>50</option><option value=${ALL.length}>Todas (${ALL.length})</option></select> Tiempo: <select id=ss><option value=0>Yo avanzo</option><option value=4>4 s</option><option value=5>5 s</option><option value=6>6 s</option></select></p><p>🏆 Mejor tiempo: <b>${b?fmt(+b):"—"}</b></p><button data-a=r6>▶ ¡Empezar!</button>`;
+ $("#sn").value=R.n;$("#ss").value=R.sec}
+ACT.r6=()=>{if($("#sn")){R.n=+$("#sn").value;R.sec=+$("#ss").value}R.l=sh(ALL).slice(0,R.n);R.i=0;R.t0=Date.now();
+ M.innerHTML=`<p>⏱️ <b id=tm>0:00</b> · <span id=pg></span></p><div class=bar><div id=pb></div></div><div class=stage id=sg></div><button data-a=rsay>🔊 Escuchar</button> <button data-a=rnext>Siguiente ▶</button>`;
+ I=setInterval(()=>{const e=$("#tm");if(e)e.textContent=fmt(Date.now()-R.t0)},500);rshow()};
+function rshow(){clearTimeout(T);if(R.i>=R.l.length)return rend();
+ const x=Math.random()*100,y=Math.random()*100;$("#pg").textContent=`${R.i+1} de ${R.l.length}`;$("#pb").style.width=R.i/R.l.length*100+"%";
+ $("#sg").innerHTML=`<b style="left:${x}%;top:${y}%;transform:translate(-${x}%,-${y}%);color:${rnd(PAL)}">${R.l[R.i]}</b>`;
+ if(R.sec)T=setTimeout(ACT.rnext,R.sec*1000)}
+ACT.rnext=()=>{R.i++;rshow()};ACT.rsay=()=>say(R.l[R.i]);
+function rend(){clearInterval(I);const e=Date.now()-R.t0,k="rv"+R.n+"_"+R.sec;let b=null,nr=0;try{b=+localStorage.getItem(k)}catch(x){}
+ if(!b||e<b){nr=1;try{localStorage.setItem(k,e)}catch(x){}}addStar(3);say("¡Terminaste! ¡Muy bien!");
+ M.innerHTML=`<h2>🎉 ¡Terminaste!</h2><p>Tu tiempo: <b>${fmt(e)}</b></p><p>${nr?"🏆 ¡Nuevo récord!":"Tu mejor tiempo: <b>"+fmt(b)+"</b>"}</p><button data-a=r6>¡Superar mi propio tiempo!</button> <button data-a=go data-v=5>⚙️ Cambiar opciones</button>`}
+go(0);
+</script></body></html>
